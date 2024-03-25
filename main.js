@@ -1,9 +1,9 @@
-import {session, Telegraf} from 'telegraf'
+import {session, Telegraf,Scenes } from 'telegraf'
 import {Markup} from 'telegraf'
 import 'dotenv/config'
 import * as consts from './const.js'
 import {usersDb,surveyDb} from "./userSide/datastore.js";
-import {sceneGen} from "./userSide/sceneGen.js";
+import {sampleScene} from "./userSide/sceneGen.js";
 usersDb.loadDatabase();
 surveyDb.loadDatabase();
 const bot = new Telegraf(process.env.BOT_TOKEN)
@@ -12,8 +12,6 @@ const surveyData = {
     description: "template",
     questions: [{q_id:"q_1",text:"Как дела?",type:"text",answers:[],optional: true}]
 }
-const currentScene = new sceneGen();
-const surveyRush = currentScene.genSurveyRush("tamplate");
 const greetingUser = (userId,passedSurveys) => {
     usersDb.find({userId}, (err, docs) => {
         if (docs.length === 0) {
@@ -75,7 +73,7 @@ bot.hears('Пройти опрос', async ctx => {
     await ctx.reply(dbChecker(surveyDb),Markup.keyboard(dataAns));
 })
 bot.hears('tamplate', async ctx => {
-    ctx.scene.enter('surveyRush')
+    await sampleScene("tamplate");
 })
 bot.hears('Добавить опрос', async ctx => {
     await ctx.reply(
@@ -91,7 +89,9 @@ bot.hears('web_app_data', async (ctx) => {
   
   });
 
+const stage = new Scenes.Stage([sampleScene("tamplate")]);
 bot.use(session())
+bot.use(stage.middleware());
 bot.launch();
 process.once('SIGINT', () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))
