@@ -1,1 +1,0 @@
-export const WEB_APP_URL = 'https://timely-valkyrie-5bbccb.netlify.app';
