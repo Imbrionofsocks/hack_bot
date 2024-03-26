@@ -1,0 +1,37 @@
+[
+  {
+    "name": "small talk",
+    "description": "Описание опроса",
+    "questions": [
+      {
+        "text": "Что интересного расскажешь?",
+        "type": "text",
+        "options": [],
+        "optional": true,
+        "key": "Вопрос 1"
+      },
+      {
+        "text": "Как жизнь?",
+        "type": "radio",
+        "options": [
+          "Плохо",
+          "Нормально",
+          "Хорошо"
+        ],
+        "optional": true,
+        "key": "Вопрос 2"
+      },
+      {
+        "text": "Что ты сегодня делал?",
+        "type": "checkbox",
+        "options": [
+          "Спал",
+          "Ел",
+          "Смотрел TikTok"
+        ],
+        "optional": false,
+        "key": "Вопрос 3"
+      }
+    ]
+  }
+]
