@@ -1,37 +1,24 @@
 [
   {
-    "name": "small talk",
-    "description": "Описание опроса",
     "questions": [
       {
-        "text": "Что интересного расскажешь?",
-        "type": "text",
+        "text": "sdagadgaege",
+        "type": "checkbox",
         "options": [],
         "optional": true,
-        "key": "Вопрос 1"
+        "id": "46RLJw4sXsYZP82tHned2K"
       },
       {
-        "text": "Как жизнь?",
-        "type": "radio",
-        "options": [
-          "Плохо",
-          "Нормально",
-          "Хорошо"
-        ],
-        "optional": true,
-        "key": "Вопрос 2"
-      },
-      {
-        "text": "Что ты сегодня делал?",
+        "text": "afef",
         "type": "checkbox",
         "options": [
-          "Спал",
-          "Ел",
-          "Смотрел TikTok"
+          "aefaefaefae"
         ],
         "optional": false,
-        "key": "Вопрос 3"
+        "id": "gDxsm9CpYutycSHUWFBLBv"
       }
-    ]
+    ],
+    "name": "sfgssgsgsg",
+    "description": "ssdgasrgrgrgar"
   }
 ]
