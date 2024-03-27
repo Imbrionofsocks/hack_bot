@@ -2,23 +2,35 @@
   {
     "questions": [
       {
-        "text": "sdagadgaege",
-        "type": "checkbox",
-        "options": [],
-        "optional": true,
-        "id": "46RLJw4sXsYZP82tHned2K"
-      },
-      {
-        "text": "afef",
-        "type": "checkbox",
+        "text": "Стиль",
+        "type": "radio",
         "options": [
-          "aefaefaefae"
+          "Да",
+          "Нет",
+          "Наверное"
         ],
         "optional": false,
-        "id": "gDxsm9CpYutycSHUWFBLBv"
+        "id": "m9kY1GJTBJpyvD3BG738pY"
+      },
+      {
+        "text": "У тебя есть домашний питомец?(если да - то как его зовут)",
+        "type": "text",
+        "options": [],
+        "optional": false,
+        "id": "9K34Rwz2kFxyFayi1wLRmw"
+      },
+      {
+        "text": "Как себя чувствуешь",
+        "type": "checkbox",
+        "options": [
+          "Хорошо",
+          "Но бывало и лучше"
+        ],
+        "optional": false,
+        "id": "2rYiq2NB47eTautmWqQ3dC"
       }
     ],
-    "name": "sfgssgsgsg",
-    "description": "ssdgasrgrgrgar"
+    "name": "ОПРОС ВЕКА",
+    "description": "Вековой опрос"
   }
 ]

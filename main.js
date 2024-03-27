@@ -4,7 +4,7 @@ import fs from 'fs';
 import {Markup} from 'telegraf';
 import {message} from "telegraf/filters";
 import surveyData from './quiz.json' assert {type: 'json'};
-import userResponses from './answers.json' assert {type: 'json'};
+import userResponses from './userResponses.json' assert {type: 'json'};
 import answers from './answers.json' assert {type: 'json'};
 import botUsers from './botUsers.json' assert {type: 'json'};
 import {addUuidToQuestion} from "./utils.js";
@@ -12,15 +12,15 @@ import {sendExcelFile} from "./export.js";
 const xlsxFile = "responses.xlsx"; // файл для хранения созданного xlsx
 const surveyFile = "quiz.json";//quiz
 const answerFile = "answers.json";
-const userResponsesFile = "userResponses.json";
-//const bot = new Telegraf(process.env.BOT_TOKEN);
+const userResponsesFile = "userResponses.json"
 const adminPass = process.env.ADMIN_PASSWORD
 const activeSurvey = {};
-
-addUuidToQuestion(surveyData);
-
+let surveyDataObj = surveyData;
+let userResponsesObj = userResponses;
+addUuidToQuestion(surveyDataObj);
+addUuidToQuestion(surveyDataObj);
 consts.bot.start((ctx) => {
-    ctx.reply('Привет! Нажми на /quiz чтобы начать проходить опрос.',casual)
+    ctx.reply('Привет! Нажми на /quiz чтобы начать проходить опрос.')
     const userId = ctx.from.id;
     if (!botUsers.users.find((element) => element === userId)) {
         botUsers.users.push(userId)
@@ -61,8 +61,11 @@ const adminMenu = Markup.keyboard([
 consts.bot.on(message('web_app_data'), (ctx) => {
     const survey = ctx.message.web_app_data.data;
     console.log("Новый опрос получен: ", survey);
-    fs.writeFileSync(surveyFile, survey); // записываем опрос в файл
+    fs.writeFileSync(surveyFile, survey);
+    surveyDataObj=JSON.parse(fs.readFileSync(surveyFile,"utf-8"));
+    addUuidToQuestion(surveyDataObj);
     fs.writeFileSync(userResponsesFile, '{}');
+    userResponsesObj=JSON.parse(fs.readFileSync(userResponsesFile,"utf-8"));
 });
 
 
@@ -75,7 +78,7 @@ consts.bot.hears('Просмотр результатов', (ctx) => {
 consts.bot.hears('Опубликовать опрос', (ctx) => {
     if (ctx.session.adminPassword === adminPass) {
         console.log("АААААААААААААААА");
-        // Загрузка данных о пользователях из файла userResponses.json
+        // Загрузка данных о пользователях из файла Obj.json
         let messageText = "Привет появился новый опрос! Кликни /quiz чтобы пройти!!!!";
         botUsers.users.forEach(async(element) => {
             ctx.telegram.sendMessage(element, messageText).catch(e=> console.log(`${element} заблокинован`));
@@ -87,13 +90,13 @@ consts.bot.hears('Опубликовать опрос', (ctx) => {
 
 consts.bot.command('quiz', (ctx) => {
     const userId = ctx.from.id;
-    // Проверяем, есть ли информация о пользователе в файле userResponses.json
-    if (userResponses[userId]) {
+    // Проверяем, есть ли информация о пользователе в файле Obj.json
+    if (userResponsesObj[userId]) {
         ctx.reply('Вы уже прошли опрос.'); // Если есть, отправляем сообщение о том, что опрос уже пройден
     } else {
         // Иначе начинаем опрос
         const keyboard = Markup.inlineKeyboard(
-            surveyData.map((survey, index) => [Markup.button.callback(survey.name, `survey:${index}`)])
+            surveyDataObj.map((survey, index) => [Markup.button.callback(survey.name, `survey:${index}`)])
         );
         ctx.reply('Пройдите опрос:', keyboard);
     }
@@ -105,7 +108,7 @@ consts.bot.action(/survey:(\d+)/, (ctx) => {
     activeSurvey[userId] = surveyIndex;
     if (userResolvedAll(userId, surveyIndex)) {
     } else {
-        const survey = surveyData[surveyIndex];
+        const survey = surveyDataObj[surveyIndex];
         if (survey) {
             const question = getNextQuestionForUser(userId, surveyIndex);
             if (question) {
@@ -144,9 +147,9 @@ async function deleteSurveyMessages(ctx, userId) {
 }
 
 function sendSurveyResults(ctx, userId) {
-    const userAnswers = userResponses[userId];
-    // Получаем имя текущего опроса из первого элемента surveyData
-    const surveyName = surveyData[0].name;
+    const userAnswers = userResponsesObj[userId];
+    // Получаем имя текущего опроса из первого элемента surveyDataObj
+    const surveyName = surveyDataObj[0].name;
     // Подготовка результатов опроса с включением имени опроса
     let results = `Результаты опроса "${surveyName}":\n`;
     for (const text in userAnswers) {
@@ -168,14 +171,14 @@ consts.bot.action(/answer:(.+)/, async (ctx) => {
     console.log(answer)
 
     // Определяем тип вопроса
-    const question = surveyData[0].questions.find(element => element.id === id);
+    const question = surveyDataObj[0].questions.find(element => element.id === id);
     if (!question) {
         return ctx.reply('Вопрос не найден - вы что-то сломали)');
     }
 
 // Обрабатываем пропуск необязательного вопроса
     if (answer === 'skipped' && question.optional) {
-        saveAnswer(userId, question.text, 'пропущен', surveyData[0].name);
+        saveAnswer(userId, question.text, 'пропущен', surveyDataObj[0].name);
         const surveyIndex = parseInt(id.substring(1, 2)); // Извлекаем индекс опроса из ключа вопроса
         if (userResolvedAll(userId, surveyIndex)) {
             await deleteSurveyMessages(ctx, userId);
@@ -189,13 +192,13 @@ consts.bot.action(/answer:(.+)/, async (ctx) => {
 
     // Обработка ответа в зависимости от типа вопроса
     if (question.type === 'text') {
-        saveAnswer(userId, question.text, answer, surveyData[0].name);
+        saveAnswer(userId, question.text, answer, surveyDataObj[0].name);
     } else if (question.type === 'radio') {
-        saveAnswer(userId, question.text, answer, surveyData[0].name);
+        saveAnswer(userId, question.text, answer, surveyDataObj[0].name);
     } else if (question.type === 'checkbox') {
-        const userAnswers = userResponses[userId] && userResponses[userId][question.text] ? userResponses[userId][question.text] : [];
+        const userAnswers = userResponsesObj[userId] && userResponsesObj[userId][question.text] ? userResponsesObj[userId][question.text] : [];
         if (answer === 'done') {
-            saveAnswer(userId, question.text, userAnswers, surveyData[0].name);
+            saveAnswer(userId, question.text, userAnswers, surveyDataObj[0].name);
         } else {
             const index = userAnswers.indexOf(answer);
             if (index !== -1) {
@@ -203,7 +206,7 @@ consts.bot.action(/answer:(.+)/, async (ctx) => {
             } else {
                 userAnswers.push(answer); // Добавляем ответ, если его нет в списке
             }
-            userResponses[userId][question.text] = userAnswers;
+            userResponsesObj[userId][question.text] = userAnswers;
 
             // Отправляем новое сообщение с обновленной клавиатурой, передавая идентификатор предыдущего сообщения
             const previousMessageId = ctx.callbackQuery.message.message_id;
@@ -271,7 +274,7 @@ async function sendQuestion(ctx, question, previousMessageId, surveyName, survey
     } else if (question.type === 'checkbox') {
         keyboard = {
             inline_keyboard: question.options.map(option => [{
-                text: `${userResponses[ctx.from.id]?.[question.text]?.includes(option) ? '☑️' : ' '} ${option}`,
+                text: `${userResponsesObj[ctx.from.id]?.[question.text]?.includes(option) ? '☑️' : ' '} ${option}`,
                 callback_data: `answer:${getKeyByQuestion(question)}|${option}`
             }]).concat([[{
                 text: 'Done',
@@ -295,10 +298,10 @@ async function sendQuestion(ctx, question, previousMessageId, surveyName, survey
 
 
 function getNextQuestionForUser(userId) {
-    const answeredKeys = userResponses[userId] ? Object.keys(userResponses[userId]) : [];
+    const answeredKeys = userResponsesObj[userId] ? Object.keys(userResponsesObj[userId]) : [];
     let nextQuestion;
-    for (let i = 0; i < surveyData.length; i++) {
-        const survey = surveyData[i];
+    for (let i = 0; i < surveyDataObj.length; i++) {
+        const survey = surveyDataObj[i];
         for (let j = 0; j < survey.questions.length; j++) {
             const question = survey.questions[j];
             if (!answeredKeys.includes(question.text)) {
@@ -311,14 +314,13 @@ function getNextQuestionForUser(userId) {
 
 
 function saveAnswer(userId, text, answer, surveyName) {
-    // Обновление userResponses.json
-    if (!userResponses[userId]) {
-        userResponses[userId] = {};
+    if (!userResponsesObj[userId]) {
+        userResponsesObj[userId] = {};
     }
-    userResponses[userId][text] = answer;
+    userResponsesObj[userId][text] = answer;
 
-    // Запись userResponses в userResponses.json
-    fs.writeFileSync('userResponses.json', JSON.stringify(userResponses, null, 2), 'utf-8');
+    // Запись userResponsesObj в userResponsesObj.json
+    fs.writeFileSync('userResponses.json', JSON.stringify(userResponsesObj, null, 2), 'utf-8');
 
     // Обновление answers.json
     if (!answers[surveyName]) {
@@ -334,12 +336,12 @@ function saveAnswer(userId, text, answer, surveyName) {
 }
 
 function userResolvedAll(userId, surveyIndex) {
-    if (!userResponses[userId] || !surveyData[surveyIndex]) {
+    if (!userResponsesObj[userId] || !surveyDataObj[surveyIndex]) {
         return false;
     }
 
-    const answeredKeys = Object.keys(userResponses[userId]);
-    const allQuestionTexts = surveyData[surveyIndex].questions.map(question => question.text);
+    const answeredKeys = Object.keys(userResponsesObj[userId]);
+    const allQuestionTexts = surveyDataObj[surveyIndex].questions.map(question => question.text);
     return answeredKeys.length === allQuestionTexts.length;
 }
 
@@ -350,11 +352,11 @@ consts.bot.on(message("text"), (ctx) => {
         // Проверяем, является ли текущий вопрос текстовым
         if (question && question.type === 'text') {
             const answer = ctx.message.text; // Получаем текстовый ответ пользователя
-            saveAnswer(userId, question.text, answer, surveyData[0].name); // Сохраняем ответ
+            saveAnswer(userId, question.text, answer, surveyDataObj[0].name); // Сохраняем ответ
             if (userResolvedAll(userId, surveyIndex)) {
             } else {
                 const question = getNextQuestionForUser(userId);
-                sendQuestion(ctx, question, null, surveyData[0].name, surveyIndex);
+                sendQuestion(ctx, question, null, surveyDataObj[0].name, surveyIndex);
             }
         }
     }

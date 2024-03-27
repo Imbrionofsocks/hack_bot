@@ -1,9 +1,9 @@
 import short from "short-uuid"
-import {FileServiceFabric} from "./FileServiceFabric.js";
+import {FileServiceFabric} from "./next_dev/FileServiceFabric.js";
 
-export const addUuidToQuestion = (surveyData) => {
+export const addUuidToQuestion = (surveyDataObj) => {
 
-    surveyData.forEach(element => {
+    surveyDataObj.forEach(element => {
         element.questions.forEach(e => {
             if (e.id) {
                 return;
@@ -11,5 +11,5 @@ export const addUuidToQuestion = (surveyData) => {
             e.id = short.generate();
         })
     })
-    FileServiceFabric.getSurveyService().setData(surveyData);
+    FileServiceFabric.getSurveyService().setData(surveyDataObj);
 }
